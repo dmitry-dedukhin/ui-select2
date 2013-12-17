@@ -5,7 +5,7 @@
  *     This change is so that you do not have to do an additional query yourself on top of Select2's own query
  * @params [options] {object} The configuration options passed to $.fn.select2(). Refer to the documentation
  */
-angular.module('ui.select2', []).value('uiSelect2Config', {}).directive('uiSelect2', ['uiSelect2Config', '$timeout', function (uiSelect2Config, $timeout) {
+angular.module('ui.select2', []).value('uiSelect2Config', {}).directive('uiSelect2', ['uiSelect2Config', '$timeout', '$parse', '$compile', function (uiSelect2Config, $timeout, $parse, $compile) {
   var options = {};
   if (uiSelect2Config) {
     angular.extend(options, uiSelect2Config);
@@ -195,6 +195,26 @@ angular.module('ui.select2', []).value('uiSelect2Config', {}).directive('uiSelec
           if (!opts.initSelection && !isSelect) {
             controller.$setViewValue(
               convertToAngularModel(elm.select2('data'))
+            );
+          }
+          if(attrs.uiSearchModel) {
+            var searchModel = $parse(attrs.uiSearchModel);
+            scope.$watch(searchModel, function (newVal, oldVal, scope) {
+              if (angular.equals(newVal, oldVal)) {
+                return;
+              }
+              elm.data('select2').search.val(newVal);
+            });
+            scope.$watch(
+              function(scope) {
+                return elm.data('select2').search.val();
+              },
+              function (newVal, oldVal, scope) {
+                if (angular.equals(newVal, oldVal)) {
+                  return;
+                }
+                searchModel.assign(scope, newVal);
+              }
             );
           }
         });
